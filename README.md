@@ -44,25 +44,6 @@ HAProxy responds (curl)
 MySQL health is green
 
 
-
-## Directory Structure
-bash
-Copy
-.
-├── db/
-│   └── init.sql             # DB schema + sample data
-├── haproxy/
-│   └── haproxy.cfg          # HAProxy config
-├── web/
-│   ├── app.py               # Simple Flask app
-│   ├── requirements.txt     # Flask requirements
-│   └── Dockerfile           # Web service Dockerfile
-├── docker-compose.yml       # Main app stack
-├── README.md                # This file
-└── .github/workflows/       # GitHub Actions CI/CD
-
-
-
 ## Secure Base Image Build
 The secure-base image is:
 
