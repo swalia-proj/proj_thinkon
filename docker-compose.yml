@@ -9,23 +9,38 @@ services:
       - "3306:3306"
     volumes:
       - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-prootpass"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     networks:
       - webnet
 
   web1:
+    container_name: web1
     build: ./web
     networks:
       - webnet
+    depends_on:
+      - db
+
 
   web2:
+    container_name: web2
     build: ./web
     networks:
       - webnet
+    depends_on:
+      - db
 
   web3:
+    container_name: web3
     build: ./web
     networks:
       - webnet
+    depends_on:
+      - db
 
   haproxy:
     image: haproxy:2.9
