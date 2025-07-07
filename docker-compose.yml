@@ -1,0 +1,47 @@
+version: '3.8'
+
+services:
+  db:
+    image: mysql:8
+    container_name: db
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpass
+      MYSQL_DATABASE: thinkon
+    ports:
+      - "3306:3306"
+    volumes:
+      - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - webnet
+
+  web1:
+    build: ./web
+    networks:
+      - webnet
+
+  web2:
+    build: ./web
+    networks:
+      - webnet
+
+  web3:
+    build: ./web
+    networks:
+      - webnet
+
+  haproxy:
+    image: haproxy:2.9
+    depends_on:
+      - web1
+      - web2
+      - web3
+    ports:
+      - "8080:80"      # public web access
+      - "8404:8404"    # HAProxy stats page (optional)
+    volumes:
+      - ./haproxy/haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg:ro
+    networks:
+      - webnet
+
+networks:
+  webnet:

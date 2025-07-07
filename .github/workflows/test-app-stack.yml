@@ -1,0 +1,52 @@
+name: Test Full App Stack
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  test-stack:
+    runs-on: ubuntu-latest
+
+    services:
+      db:
+        image: mysql:8
+        env:
+          MYSQL_ROOT_PASSWORD: rootpass
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -prootpass"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Docker Compose
+        run: docker-compose -f docker-compose.yml up --build -d
+
+      - name: Wait for services to stabilize
+        run: sleep 20
+
+      - name: List running containers
+        run: docker ps
+
+      - name: Smoke test - Web (via HAProxy)
+        run: |
+          echo "Running curl test against HAProxy on port 8080..."
+          curl -s -o /dev/null -w "%{http_code}" http://localhost:8080 | grep 200
+
+      - name: Smoke test - MySQL
+        run: |
+          echo "Checking MySQL container health..."
+          docker inspect --format='{{json .State.Health.Status}}' $(docker ps -qf "name=db") | grep healthy
+
+      - name: Tear down stack
+        if: always()
+        run: docker-compose -f docker-compose.yml down
