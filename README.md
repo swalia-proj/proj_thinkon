@@ -20,42 +20,106 @@ The solution meets the following requirements:
 | `db`          | MySQL 8 with a sample `thinkon` database |
 | `web1/2/3`    | Flask applications served on port 5000   |
 | `haproxy`     | Load balancer for routing web traffic    |
+---
 
+## 🖼 Architecture Diagram
 
-## Testing via GitHub Actions
-Two workflows are defined:
+![Architecture Diagram](./Proj_ThinkON.png)
 
-Rebuild Secure Base Image
-.github/workflows/patch-rebuild-secure-base.yml
+---
 
-Runs weekly (Monday, 2AM UTC)
+## 🚀 Getting Started
 
-Builds and pushes ghcr.io/swalia-proj/secure-base:latest
+### Prerequisites
 
-Test Full App Stack
-.github/workflows/test-app-stack.yml
+- Docker + Docker Compose
 
-Spins up HAProxy, Flask, and MySQL services
+### Clone and Build Locally
 
-Runs smoke tests to validate:
+```bash
+git clone https://github.com/swalia-proj/proj_thinkon.git
+cd proj_thinkon
+docker compose up --build -d
+````
 
-HAProxy responds (curl)
+Then open your browser:
 
-MySQL health is green
+```
+http://localhost:8080
+http://localhost:8080/users
+```
 
+---
 
-## Secure Base Image Build
-The secure-base image is:
+## 🧪 Smoke Tests
 
-Based on ubuntu:20.04
+After deployment:
 
-Auto-patched weekly via GitHub Actions
+```bash
+curl -s -o /dev/null -w "%{http_code}" http://localhost:8080
+# Expected: 200
+```
 
-Preinstalled with python3 and pip3
+To check MySQL health:
 
-Pushed to GitHub Container Registry (GHCR)
+```bash
+docker exec -it db mysql -uroot -prootpass -e "SELECT * FROM thinkon.users;"
+```
 
+---
 
-Author
-Sonia Walia
-Email: soniawalia.sw@gmail.com
+## 🔄 CI/CD Workflows
+
+### `test-app-stack.yml`
+
+This GitHub Actions workflow:
+
+* Spins up all services
+* Runs smoke tests for:
+
+  * Web load balancing
+  * MySQL healthcheck
+* Tears down after completion
+
+### `patch-rebuild-secure-base.yml` (in separate repo)
+
+Weekly rebuild of the secure base image to keep OS-level patches up to date.
+
+---
+
+## 🔐 DevSecOps Direction
+
+This setup takes a lightweight DevSecOps approach:
+
+* Base image is patched weekly using GitHub Actions
+* Secrets like DB password are injected via Compose (can be replaced with `.env` or secrets manager)
+* Images built with provenance metadata via `buildx` and published to GHCR
+* No external DB port exposed — internal container networking used
+
+---
+
+## 📁 Project Structure
+
+```
+.
+├── db/
+│   └── init.sql
+├── haproxy/
+│   └── haproxy.cfg
+├── web/
+│   ├── app.py
+│   ├── Dockerfile
+│   └── requirements.txt
+├── .github/
+│   └── workflows/
+│       └── test-app-stack.yml
+├── docker-compose.yml
+└── README.md
+```
+
+---
+
+## Author
+
+**Sonia Walia**
+📧 [soniawalia.sw@gmail.com](mailto:soniawalia.sw@gmail.com)
